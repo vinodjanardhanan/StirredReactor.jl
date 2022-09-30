@@ -13,7 +13,7 @@ Documentation for [StirredReactor](https://github.com/vinodjanardhanan/StirredRe
 To install the package, use the following commands in the julia REPL
 ```julia
 julia> using Pkg
-julia> Pkg.add("StittedReactor")
+julia> Pkg.add("StirredReactor")
 ```
 
 # General interfaces
@@ -41,13 +41,13 @@ Here $\bar{M}$ refers the average molecular weights. The above equation for outl
 ## Surface chemistry
 For solving a surface chemistry problem: On the Julia REPL 
 ```julia
-julia>using StittedReactor
+julia>using StirredReactor
 julia>plug("cstr.xml","lib/", surfchem=true)
 ```
 ## Gasphase chemistry
 For solving a gasphase chemistry problem: On the Julia REPL 
 ```julia
-julia>using StittedReactor
+julia>using StirredReactor
 julia>plug("cstr.xml", "lib/", gaschem=true)
 ```
 
@@ -56,7 +56,7 @@ In the above calls, it is assumed that the input file *cstr.xml* is present in t
 ## User defined chemistry
 For solving the model with user defined chemistry: On the Julia REPL 
 ```julia
-julia>using StittedReactor, ReactionCommons
+julia>using StirredReactor, ReactionCommons
 julia>plug("cstr.xml", "lib/", udf)
 ```
 *udf* is a function having the following signature
