@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<surface_chemisrty unit="kJ/mol" name="ch4ni">	
+	<species>(ni) H(ni) O(ni) CH4(ni) H2O(ni) CO2(ni) CO(ni) OH(ni) C(ni) HCO(ni) CH(ni)  CH3(ni) CH2(ni) </species>
+	<site name="(ni)">
+		<coordination>ch4(ni)=1,co(ni)=1.0</coordination>
+		<density unit="mol/cm2">2.66e-09</density>
+		<initial>h2o(ni)=0.4,(ni)=0.6 </initial>
+	</site>
+	<stick>
+		<rxn id="1" >h2 + (ni) + (ni) => h(ni) + h(ni) 				@ 1.0000e-2 </rxn>
+		<rxn id="2" >o2 + (ni) + (ni) => o(ni) + o(ni) 				@ 1.0000e-2 </rxn>
+		<rxn id="3" >ch4 + (ni) => ch4(ni)              			@ 8.0000e-3 </rxn>
+		<rxn id="4" >h2o + (ni) => h2o(ni)              			@ 1.0000e-1 </rxn>
+		<rxn id="5" >co2 + (ni) => co2(ni)              			@ 1.0000e-5 </rxn>
+		<rxn id="6" >co + (ni) => co(ni)                			@ 5.0000e-1 </rxn>
+	</stick>
+	<arrhenius>
+		<rxn id="7"  >h(ni) + h(ni) => (ni) + (ni) + h2 			@ 2.545e+19		0.0		81.21	</rxn>
+		<rxn id="8"  >o(ni) + o(ni) => (ni) + (ni) + o2 			@ 4.283e+23		0.0		474.95	</rxn>
+		<rxn id="9"  >ch4(ni)  => (ni) + ch4 			   			@ 8.705e+15		0.0		37.55	</rxn>
+		<rxn id="10" >h2o(ni)  => (ni) + h2o			   			@ 3.732e+12		0.0 	60.79	</rxn>
+		<rxn id="11" >co2(ni)  => (ni) + co2 			   			@ 6.447e+07  	0.0		25.98	</rxn>
+		<rxn id="12" >co(ni)  => (ni) + co 			   				@ 3.563e+11		0.0		111.27	</rxn>
+		<rxn id="13" >o(ni) + h(ni) => oh(ni) + (ni)				@ 5.000e+22		0.0		97.90	</rxn>
+		<rxn id="14" >oh(ni) + (ni) => o(ni) + h(ni)				@ 1.781e+21		0.0		36.09	</rxn>
+		<rxn id="15" >oh(ni) + h(ni) => h2o(ni) + (ni)				@ 3.000e+20		0.0		42.70	</rxn>
+		<rxn id="16" >h2o(ni) + (ni) => oh(ni) + h(ni)				@ 2.271e+21		0.0		91.76	</rxn>
+		<rxn id="17" >oh(ni) + oh(ni) => o(ni) + h2o(ni)			@ 3.000e+21		0.0		100.00	</rxn>
+		<rxn id="18" >o(ni) + h2o(ni) => oh(ni) + oh(ni)			@ 6.373e+23		0.0		210.86	</rxn>
+		<rxn id="19" >o(ni) + c(ni) => co(ni) + (ni)				@ 5.200e+23		0.0		148.10	</rxn>
+		<rxn id="20" >co(ni) + (ni) => o(ni) + c(ni)				@ 1.354e+22	   -3.0		116.12	</rxn>
+		<rxn id="21" >o(ni) + co(ni) => co2(ni) + (ni)				@ 2.000e+19		0.0		123.60	</rxn>
+		<rxn id="22" >co2(ni) + (ni) => o(ni) + co(ni)				@ 4.653e+23	   -1.0		89.32	</rxn>
+		<rxn id="23" >hco(ni) + (ni) => co(ni) + h(ni)				@ 3.700e+21		0.0		0.0		</rxn>
+		<rxn id="24" >co(ni) + h(ni) => hco(ni) + (ni)				@ 4.019e+20	   -1.0		132.23	</rxn>
+		<rxn id="25" >hco(ni) + (ni) => o(ni) + ch(ni)				@ 3.700e+24	   -3.0		95.80	</rxn>
+		<rxn id="26" >o(ni) + ch(ni) => hco(ni) + (ni)				@ 4.604e+20     0.0		109.97	</rxn>
+		<rxn id="27" >ch4(ni) + (ni) => ch3(ni) + h(ni)				@ 3.700e+21		0.0		57.70	</rxn>
+		<rxn id="28" >ch3(ni) + h(ni) => ch4(ni) + (ni)				@ 6.034e+21		0.0		61.58	</rxn>
+		<rxn id="29" >ch3(ni) + (ni) => ch2(ni) + h(ni)				@ 3.700e+24		0.0		100.00	</rxn>
+		<rxn id="30" >ch2(ni) + h(ni) => ch3(ni) + (ni)				@ 1.293e+23		0.0		55.33	</rxn>
+		<rxn id="31" >ch2(ni) + (ni) => ch(ni) + h(ni)				@ 3.700e+24		0.0		97.10	</rxn>
+		<rxn id="32" >ch(ni) + h(ni) => ch2(ni) + (ni)				@ 4.089e+24		0.0		79.18	</rxn>
+		<rxn id="33" >ch(ni) + (ni) => c(ni) + h(ni)				@ 3.700e+21		0.0		18.80	</rxn>
+		<rxn id="34" >c(ni) + h(ni) => ch(ni) + (ni)				@ 4.562e+22		0.0		161.11	</rxn>
+		<rxn id="35" >o(ni) + ch4(ni) => ch3(ni) + oh(ni)			@ 1.700e+24		0.0		88.30	</rxn>
+		<rxn id="36" >ch3(ni) + oh(ni) => o(ni) + ch4(ni)			@ 9.876e+22		0.0		30.37	</rxn>
+		<rxn id="37" >o(ni) + ch3(ni) => ch2(ni) + oh(ni)			@ 3.700e+24		0.0		130.10	</rxn>
+		<rxn id="38" >ch2(ni) + oh(ni) => o(ni) + ch3(ni)			@ 4.607e+21		0.0		23.62	</rxn>
+		<rxn id="39" >o(ni) + ch2(ni) => ch(ni) + oh(ni)			@ 3.700e+24		0.0		126.80	</rxn>
+		<rxn id="40" >ch(ni) + oh(ni) => o(ni) + ch2(ni)			@ 1.457e+23		0.0		47.07	</rxn>
+		<rxn id="41" >o(ni) + ch(ni) => c(ni) + oh(ni)				@ 3.700e+21		0.0		48.10	</rxn>
+		<rxn id="42" >c(ni) + oh(ni) => o(ni) + ch(ni)				@ 1.625e+21		0.0		128.61	</rxn>
+	</arrhenius>
+	<coverage id="12 20 21">co(ni)=-50</coverage>
+	<coverage id="23">co(ni)=50</coverage>
+	<!--mwc>3 4</mwc-->
+	<!--order id="23 ">co(ni)=2</order>
+	<order id="12 ">c(ni)=1.5</order-->
+</surface_chemisrty>

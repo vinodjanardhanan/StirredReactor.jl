@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<cstr>
+	<molefractions>H2=0.25,O2=0.25,N2=0.5</molefractions>
+	<T>1073.15</T>
+	<p>1e5</p>
+	<volume>1e-5</volume>
+	<flow-rate>1.66e-6</flow-rate>
+	<time>10</time>
+	<gas_mech>h2o2.dat</gas_mech>
+</cstr>
