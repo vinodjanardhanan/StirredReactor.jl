@@ -66,7 +66,43 @@ using IdealGas, RxnHelperUtils, SurfaceReactions, GasphaseReactions, ReactionCom
 
     @testset "Testing user defined chemistry " begin        
         function udf(state)
-            state.source[1:end] .= 0.0            
+            # println(state.species)
+            # println(state.mole_frac)
+            # println(state.T)
+            # println(state.p)
+            pp = zeros(length(state.mole_frac))
+            ch4 = 1
+            h2o = 2
+            h2 = 3
+            co = 4
+            co2 = 5
+            o2 = 6
+            n2 = 7
+            pp = state.p * state.mole_frac
+            #CH4 + 0.5 O2 -> 2H2 + CO
+            k10 = 1e14
+            E1 = 50e3            
+            
+            k1 = k10*exp(-E1/GasphaseReactions.R/state.T)
+            r1 = k1 * pp[ch4] * pp[o2]^0.5
+
+            k20 = 1e14
+            E2 = 30e3
+            k2 = k20 * exp(-E2/GasphaseReactions.R/state.T)
+            r2 = k2 * pp[co] * pp[o2]^0.5
+
+            k30 = 1e14
+            E3 = 10e3
+            k3 = k30 * exp(-E3/GasphaseReactions.R/state.T)
+            r3 = k3 * pp[h2] * pp[o2]^0.5
+
+            state.source[1:end] .= 0.0   
+            state.source[ch4]  = -r1
+            state.source[o2] = -0.5(r1+r2+r3)
+            state.source[co] = r1 - r2
+            state.source[h2] = 2r1 - r3
+            state.source[co2] = r2
+            state.source[h2o] = r3
         end
         input_file = joinpath("cstr_udf", "cstr.xml")
         retcode = cstr(input_file, lib_dir, udf)

@@ -264,7 +264,7 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
         cp = ConstParams(ρ,q,avg_molwt,As,V,mass_fracs_in, T, p,ρq_mass_fracs)
         params = (gr_state, sr_state, thermo_obj, smd, gmd, cp, chem)
     else
-        cp = ConstParams(ρ,q,avg_molwt,1.0, V, mass_fracs_in, T, p,ρq_mass_fracs)
+        cp = ConstParams(ρ,q,avg_molwt,As, V, mass_fracs_in, T, p,ρq_mass_fracs)
         params = (ud_state, thermo_obj, UsrMech(), cp, chem)
     end
         
@@ -343,7 +343,7 @@ function residual!(du,u,p,t)
     # call to get user defined rates 
     if p[chem].userchem
         p[chem].udf(p[state])
-        rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)
+        rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)*cp.As/cp.V
     end
     # Gas species residual 
     du[1:ng] = (spIn - spOut + rgVec)/ρ
