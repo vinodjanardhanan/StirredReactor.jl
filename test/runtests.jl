@@ -78,23 +78,27 @@ using IdealGas, RxnHelperUtils, SurfaceReactions, GasphaseReactions, ReactionCom
             co2 = 5
             o2 = 6
             n2 = 7
-            pp = state.p * state.mole_frac
+            pp = (state.p/GasphaseReactions.R/state.T) * state.mole_frac
             #CH4 + 0.5 O2 -> 2H2 + CO
-            k10 = 1e14
-            E1 = 50e3            
-            
-            k1 = k10*exp(-E1/GasphaseReactions.R/state.T)
-            r1 = k1 * pp[ch4] * pp[o2]^0.5
-
-            k20 = 1e14
+            k10 = 1e6
+            E1 = 40e3            
+            k20 = 1e15
             E2 = 30e3
-            k2 = k20 * exp(-E2/GasphaseReactions.R/state.T)
-            r2 = k2 * pp[co] * pp[o2]^0.5
+            k30 = 1e15
+            E3 = 230e3
 
-            k30 = 1e14
-            E3 = 10e3
+            k1 = k10*exp(-E1/GasphaseReactions.R/state.T)
+            k2 = k20 * exp(-E2/GasphaseReactions.R/state.T)
             k3 = k30 * exp(-E3/GasphaseReactions.R/state.T)
-            r3 = k3 * pp[h2] * pp[o2]^0.5
+            if pp[o2] < 0
+                r1 = 0.0
+                r2 = 0.0
+                r3 = 0.0
+            else
+                r1 = k1 * pp[ch4] * pp[o2]^0.5
+                r2 = k2 * pp[co] * pp[o2]^0.5
+                r3 = k3 * pp[h2] * pp[o2]^0.5
+            end
 
             state.source[1:end] .= 0.0   
             state.source[ch4]  = -r1
@@ -103,6 +107,8 @@ using IdealGas, RxnHelperUtils, SurfaceReactions, GasphaseReactions, ReactionCom
             state.source[h2] = 2r1 - r3
             state.source[co2] = r2
             state.source[h2o] = r3
+
+            
         end
         input_file = joinpath("cstr_udf", "cstr.xml")
         retcode = cstr(input_file, lib_dir, udf)

@@ -13,15 +13,16 @@ end
 global o_streams 
 
 struct ConstParams{T1}
-    ρ_in # inlet density
+    #ρ_in # inlet density
     q_in    #inlet flow rate 
     avg_molwt_in   #average molecular weight at the inlet
     As  #surface area
     V   #reactor volume
-    mass_fracs_in::Array{T1,1}  #inlet mass fractions
+    #mass_fracs_in::Array{T1,1}  #inlet mass fractions
+    c_in::Array{T1,1}
     T   # temperature 
     p   # pressure
-    ρq_yk::Array{T1,1} #inlet mass flow rate ρ x q x y_k
+    #ρq_yk::Array{T1,1} #inlet mass flow rate ρ x q x y_k
 end
 
 
@@ -209,7 +210,8 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
     #density at the inlet 
     ρ = density(mole_fracs,thermo_obj.molwt,T,p)
     #solution vector
-    sol = deepcopy(mass_fracs_in)
+    c_in = (p/RxnHelperUtils.R/T)*mole_fracs
+    sol = deepcopy(c_in)
 
     
     if chem.gaschem
@@ -251,20 +253,22 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
     #inlet conditions    
     t_span = (0,time)    
     #the following is the first term in the right hand side of gasphase species residual
-    ρq_mass_fracs = mass_fracs_in * (ρ*q)
+    # ρq_mass_fracs = mass_fracs_in * (ρ*q)
+
+    
     
     if chem.surfchem
-        cp = ConstParams(ρ,q,avg_molwt,As,V,mass_fracs_in, T, p,ρq_mass_fracs)
+        cp = ConstParams(q,avg_molwt,As,V,c_in, T, p)
         params = (sr_state, thermo_obj, smd, cp, chem)
     elseif chem.gaschem
         # As is not required in the case of gas chemistry
-        cp = ConstParams(ρ,q,avg_molwt,1.0, V, mass_fracs_in, T, p,ρq_mass_fracs)
+        cp = ConstParams(q,avg_molwt,1.0, V, c_in, T, p)
         params = (gr_state, thermo_obj, gmd, cp, chem)
     elseif chem.gaschem && chem.surfchem
-        cp = ConstParams(ρ,q,avg_molwt,As,V,mass_fracs_in, T, p,ρq_mass_fracs)
+        cp = ConstParams(q,avg_molwt,As,V,c_in, T, p)
         params = (gr_state, sr_state, thermo_obj, smd, gmd, cp, chem)
     else
-        cp = ConstParams(ρ,q,avg_molwt,As, V, mass_fracs_in, T, p,ρq_mass_fracs)
+        cp = ConstParams(q,avg_molwt,As, V, c_in, T, p)
         params = (ud_state, thermo_obj, UsrMech(), cp, chem)
     end
         
@@ -303,25 +307,17 @@ function residual!(du,u,p,t)
     chem = 5
     
 
-
-
     ng = length(p[state].mole_frac)
     
-    mass_fracs = u[1:ng]
+    conc = u[1:ng]
     #update the state with latest mole fractions
-    massfrac_to_molefrac!(p[state].mole_frac,mass_fracs,p[thermo_obj].molwt)
+    p[state].mole_frac = conc/sum(conc)
 
-    #calculate the density
-    ρ = density(p[state].mole_frac,p[thermo_obj].molwt,cp.T,cp.p)
 
 
     #outlet volumetric flow rate 
     q_out = cp.q_in*cp.avg_molwt_in/average_molwt(p[state].mole_frac,p[thermo_obj].molwt)
 
-
-    # In and out terms for gasphase species residual
-    spIn = cp.ρq_yk/cp.V
-    spOut = q_out * ρ * mass_fracs /cp.V
 
     #update the state with latest coverages
     if p[chem].surfchem
@@ -329,24 +325,25 @@ function residual!(du,u,p,t)
         p[state].covg = u[ng+1:ng+ns]
         #calculate the molar production rates        
         SurfaceReactions.calculate_molar_production_rates!(p[state],p[thermo_obj],p[md])
-        rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)*cp.As/cp.V    
+        # rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)*cp.As/cp.V    
+        rgVec = p[state].source[1:ng] * cp.As/cp.V    
         #surface species residual 
         du[ng+1:ng+ns] = (p[state].source[ng+1:ng+ns] .* p[md].sm.si.site_coordination)/(p[md].sm.si.density*1e4)            
     end
     
     if p[chem].gaschem
         GasphaseReactions.calculate_molar_production_rates!(p[state], p[md], p[thermo_obj])
-        rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)
+        rgVec = p[state].source[1:ng] 
     end
 
 
     # call to get user defined rates 
     if p[chem].userchem
         p[chem].udf(p[state])
-        rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)*cp.As/cp.V
+        rgVec = p[state].source[1:ng] *(cp.As/cp.V)
     end
     # Gas species residual 
-    du[1:ng] = (spIn - spOut + rgVec)/ρ
+    du[1:ng] = ( (cp.q_in/cp.V)*cp.c_in - (q_out/cp.V) * u[1:ng]) + rgVec 
 
     
 end
