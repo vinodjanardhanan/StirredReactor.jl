@@ -16,7 +16,7 @@ struct ConstParams{T1}
     #ρ_in # inlet density
     q_in    #inlet flow rate 
     avg_molwt_in   #average molecular weight at the inlet
-    As  #surface area
+    AsV  #surface area
     V   #reactor volume
     #mass_fracs_in::Array{T1,1}  #inlet mass fractions
     c_in::Array{T1,1}
@@ -62,11 +62,11 @@ cstr(inlet_comp, T, p, time; Asv=1.0, chem, thermo_obj, md)
 -   p : operating pressure (Pa) 
 -   q : volumetric flow rate (m3/s)
 -   time : integration time (s)   
--   As : Surface area to volume ratio (important in the case of surface reactions. 1 in the case of gasphase chemistry)
+-   AsV : Surface area to volume ratio (important in the case of surface reactions. 1 in the case of gasphase chemistry)
 -   thermo_obj : Species thermo object (Please refer IdealGas package documentation)
 -   md : MechanismDefinition (Please refer to ReactionCommons documentation)
 """
-function  cstr(inlet_comp, T, p, q, V, time; As=1.0, chem, thermo_obj, md)
+function  cstr(inlet_comp, T, p, q, V, time; AsV=1.0, chem, thermo_obj, md)
 
     function  get_mole_fracs(species, inlet_comp)
         mole_fracs = zeros(length(species))
@@ -89,7 +89,7 @@ function  cstr(inlet_comp, T, p, q, V, time; As=1.0, chem, thermo_obj, md)
     
     mole_fracs = get_mole_fracs(species, inlet_comp)    
 
-    geom = (V, As)
+    geom = (V, AsV)
     conditions = (T, p, q, mole_fracs)
 
     end_time, u = cstr_common( conditions, geom, chem, md, n_species, time, thermo_obj, false, interface_call = true)    
@@ -159,11 +159,11 @@ function cstr(input_file::AbstractString, lib_dir::AbstractString, sens::Bool, c
     global o_streams = (g_stream, s_stream)
     create_header(g_stream,["t","T","p","rho"],gasphase)    
 
-    As = 1.0
+    # As = 1.0
+    #get the surface area
+    AsV = get_value_from_xml(xmlroot,"AsV")
     # surface chemistry related 
-    if chem.surfchem
-        #get the surface area
-        As = get_value_from_xml(xmlroot,"As")
+    if chem.surfchem        
         #get the mechanism input file
         local mech_file = get_text_from_xml(xmlroot,"surface_mech")
         mech_file = lib_dir*"/"*mech_file
@@ -172,7 +172,7 @@ function cstr(input_file::AbstractString, lib_dir::AbstractString, sens::Bool, c
         create_header(s_stream,"t","T", smd.sm.species)
     end
 
-    geom = (V, As)
+    geom = (V, AsV)
     conditions = (T, p, q, mole_fracs, gasphase)
     if chem.surfchem && !chem.gaschem
         mech_def = smd
@@ -198,7 +198,7 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
     q = conditions[3]
     mole_fracs = conditions[4]
     V = geom[1]
-    As = geom[2]
+    AsV = geom[2]
     
     # species source terms 
     source = zeros(n_species)
@@ -258,17 +258,17 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
     
     
     if chem.surfchem
-        cp = ConstParams(q,avg_molwt,As,V,c_in, T, p)
+        cp = ConstParams(q,avg_molwt,AsV,V,c_in, T, p)
         params = (sr_state, thermo_obj, smd, cp, chem)
     elseif chem.gaschem
         # As is not required in the case of gas chemistry
         cp = ConstParams(q,avg_molwt,1.0, V, c_in, T, p)
         params = (gr_state, thermo_obj, gmd, cp, chem)
     elseif chem.gaschem && chem.surfchem
-        cp = ConstParams(q,avg_molwt,As,V,c_in, T, p)
+        cp = ConstParams(q,avg_molwt,AsV,V,c_in, T, p)
         params = (gr_state, sr_state, thermo_obj, smd, gmd, cp, chem)
     else
-        cp = ConstParams(q,avg_molwt,As, V, c_in, T, p)
+        cp = ConstParams(q,avg_molwt,AsV, V, c_in, T, p)
         params = (ud_state, thermo_obj, UsrMech(), cp, chem)
     end
         
@@ -283,13 +283,13 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
 
     if !interface_call
         cb = FunctionCallingCallback(save_data)
-        soln = solve(prob, CVODE_BDF(), reltol=1e-6, abstol=1e-10, save_everystep=false,callback=cb);   
+        soln = solve(prob, CVODE_BDF(), reltol=1e-10, abstol=1e-15, save_everystep=false,callback=cb);   
         #close the files
         close(o_streams[1])
         close(o_streams[2])    
         return soln.retcode
     else
-        soln = solve(prob, CVODE_BDF(), reltol=1e-6, abstol=1e-10, save_everystep=false);   
+        soln = solve(prob, CVODE_BDF(), reltol=1e-10, abstol=1e-15, save_everystep=false);   
         return soln.t, soln.u        
     end
 
@@ -326,7 +326,7 @@ function residual!(du,u,p,t)
         #calculate the molar production rates        
         SurfaceReactions.calculate_molar_production_rates!(p[state],p[thermo_obj],p[md])
         # rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)*cp.As/cp.V    
-        rgVec = p[state].source[1:ng] * cp.As/cp.V    
+        rgVec = p[state].source[1:ng] * cp.AsV
         #surface species residual 
         du[ng+1:ng+ns] = (p[state].source[ng+1:ng+ns] .* p[md].sm.si.site_coordination)/(p[md].sm.si.density*1e4)            
     end
@@ -340,7 +340,7 @@ function residual!(du,u,p,t)
     # call to get user defined rates 
     if p[chem].userchem
         p[chem].udf(p[state])
-        rgVec = p[state].source[1:ng] *(cp.As/cp.V)
+        rgVec = p[state].source[1:ng] * cp.AsV
     end
     # Gas species residual 
     du[1:ng] = ( (cp.q_in/cp.V)*cp.c_in - (q_out/cp.V) * u[1:ng]) + rgVec 

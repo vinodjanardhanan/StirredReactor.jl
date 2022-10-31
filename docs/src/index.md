@@ -27,12 +27,12 @@ Modules = [StirredReactor]
 
 # Governing equations
 ```math
-\rho V \frac{dY_k}{dt} = \dot{q}_{in} \rho_{in} Y_{k,in} - \dot{q}_{out} \rho Y_k + \dot{s_k} M_k A_s + \dot{\omega_k}M_k V
+V \frac{dC_k}{dt} = \dot{q}_{in} C_{k,in} - \dot{q}_{out} C_k + \dot{s_k} A_s + \dot{\omega_k} V
 ```
-Here $Y_k$ is the mass fraction of species $k$, $\rho$ is the density (kg/m$^3$) of the mixture, $V$ is the reactor volume (m$^3$), $M_k$ is the molecular weight of species $k$ (Kg/mol), $\dot{q}$ is the volumetric flow rate (m$^3$/s), $\dot{s}_k$ is the molar production rate (mol/m$^2$-s) of species $k$ due to surface reactions, $\dot{\omega}_k$ is the molar production rate (mol/m$^3$-s) of species $k$ due to gas phase reactions, and $A_s$ is the surface are in $m^2$ The subscripts *in* and *out* respectively refers to the inlet and outlet conditions. The outlet volumetric flow rate is related to the inlet volumetric flow rate according to 
+Here $C_k$ is the concentration of species $k$, $V$ is the reactor volume (m$^3$), $\dot{q}$ is the volumetric flow rate (m$^3$/s), $\dot{s}_k$ is the molar production rate (mol/m$^2$-s) of species $k$ due to surface reactions, $\dot{\omega}_k$ is the molar production rate (mol/m$^3$-s) of species $k$ due to gas phase reactions, and $A_s$ is the surface are in $m^2$ The subscripts *in* and *out* respectively refers to the inlet and outlet conditions. The outlet volumetric flow rate is related to the inlet volumetric flow rate according to 
 
 ```math
-\dot{q}_{out} = \frac{q_{in} \bar{M_in} }{\bar{M}}
+\dot{q}_{out} = \frac{q_{in} \bar{M_{in}} }{\bar{M}}
 ```
 
 Here $\bar{M}$ refers the average molecular weights. The above equation for outlet volumetric flow rate is valid only when there is no mass accumulation within the reactor. 
@@ -87,7 +87,7 @@ The method takes *file\_name* as the argument. The file_name points to the input
     <p>1e5</p>
     <volume>1e-5</volume>
     <flow-rate>1.66e-6</flow-rate>
-    <As>5e-3</As>
+    <AsV>5e-3</AsV>
     <time>10</time>
     <surface_mech>data/ch4ni.xml</surface_mech>
 </cstr>
@@ -103,7 +103,7 @@ The method takes *file\_name* as the argument. The file_name points to the input
     <p>1e5</p>
     <volume>1e-5</volume>
     <flow-rate>1.66e-6</flow-rate>
-    <As>5e-3</As>
+    <AsV>9.8e6</AsV>
     <time>10</time>
 </cstr>
 ```
@@ -118,7 +118,6 @@ The method takes *file\_name* as the argument. The file_name points to the input
     <p>1e5</p>
     <volume>1e-5</volume>
     <flow-rate>1.66e-6</flow-rate>
-    <As>5e-3</As>
     <time>10</time>
     <gas_mech>h2o2.dat</gas_mech>
 </cstr>
@@ -136,7 +135,7 @@ The meaning of different tags is specified below.
 - <p>: initial pressure in Pa
 - <volume> : reactor volume in m$^3$
 - <flow-rate> : volumetric flow rate in m$^3$/s
-- <As> : surface area available for surface reactions m$^2$
+- <AsV> : surface area per unit volume (1/m)
 - <time> : integration time in s
 - <surface_mech> : name of the surface reaction mechanism. 
 - <gas_mech> : name of the gasphase reaction mechanism. 
