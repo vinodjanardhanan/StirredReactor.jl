@@ -93,9 +93,7 @@ function  cstr(inlet_comp, T, p, q, V, time; AsV=1.0, chem, thermo_obj, md)
     conditions = (T, p, q, mole_fracs)
 
     end_time, u = cstr_common( conditions, geom, chem, md, n_species, time, thermo_obj, false, interface_call = true)    
-    mass_fracs = u[end][1:length(species)]
-    mole_fracs = zeros(length(mass_fracs))
-    massfrac_to_molefrac!(mole_fracs, mass_fracs, thermo_obj.molwt)
+    mole_fracs = u[1:length(species)]/sum(u[1:length(species)])
     return end_time, Dict(species .=> mole_fracs)    
 end
 
@@ -284,13 +282,15 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
     if !interface_call
         cb = FunctionCallingCallback(save_data)
         soln = solve(prob, CVODE_BDF(), reltol=1e-10, abstol=1e-15, save_everystep=false,callback=cb);   
+        # soln = solve(SteadyStateProblem(prob), DynamicSS(CVODE_BDF()), dt=1e-4, reltol=1e-10, abstol=1e-15, save_everystep=false,callback=cb)
         #close the files
         close(o_streams[1])
         close(o_streams[2])    
         return soln.retcode
     else
         soln = solve(prob, CVODE_BDF(), reltol=1e-10, abstol=1e-15, save_everystep=false);   
-        return soln.t, soln.u        
+        soln = solve(SteadyStateProblem(prob), DynamicSS(CVODE_BDF()), dt=1e-10, reltol=1e-10, abstol=1e-15, save_everystep=false)
+        return 0, soln.u        
     end
 
 end

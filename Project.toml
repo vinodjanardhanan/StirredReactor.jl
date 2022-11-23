@@ -1,7 +1,7 @@
 name = "StirredReactor"
 uuid = "0f306737-e494-4d62-9475-91bb092c0e67"
 authors = ["Vinod Janardhanan"]
-version = "0.1.1"
+version = "0.1.2"
 
 [deps]
 DifferentialEquations = "0c46a032-eb83-5123-abaf-570d42b7fbaa"
