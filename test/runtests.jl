@@ -12,7 +12,7 @@ using IdealGas, RxnHelperUtils, SurfaceReactions, GasphaseReactions, ReactionCom
 
     @testset "Testing surface chemistry" begin
         input_file = joinpath("cstr_surf", "cstr.xml")
-        retcode = cstr(input_file, lib_dir, surfchem=true)
+        retcode = cstr(input_file, lib_dir, surfchem=true)        
         @test retcode == Symbol("Success")        
     end
 

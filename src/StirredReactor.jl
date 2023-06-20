@@ -285,10 +285,10 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
         # soln = solve(SteadyStateProblem(prob), DynamicSS(CVODE_BDF()), dt=1e-4, reltol=1e-10, abstol=1e-15, save_everystep=false,callback=cb)
         #close the files
         close(o_streams[1])
-        close(o_streams[2])    
-        return soln.retcode
+        close(o_streams[2])            
+        return Symbol(soln.retcode)
     else
-        soln = solve(prob, CVODE_BDF(), reltol=1e-10, abstol=1e-15, save_everystep=false);   
+        # soln = solve(prob, CVODE_BDF(), reltol=1e-10, abstol=1e-15, save_everystep=false);   
         soln = solve(SteadyStateProblem(prob), DynamicSS(CVODE_BDF()), dt=1e-10, reltol=1e-10, abstol=1e-15, save_everystep=false)
         return 0, soln.u        
     end
