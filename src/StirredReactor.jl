@@ -154,9 +154,11 @@ function cstr(input_file::AbstractString, lib_dir::AbstractString, sens::Bool, c
     #file output stream for saving the data
     g_stream = open(output_file(input_file, "gas_profile.dat"),"w")
     s_stream = open(output_file(input_file, "surf_covg.dat"),"w")
-    global o_streams = (g_stream, s_stream)
+    csv_g_stream = open(output_file(input_file, "gas_profile.csv"),"w")
+    csv_s_stream = open(output_file(input_file, "surf_covg.csv"),"w")
+    global o_streams = (g_stream, s_stream, csv_g_stream, csv_s_stream)
     create_header(g_stream,["t","T","p","rho"],gasphase)    
-
+    write_csv(csv_g_stream, ["t","T","p","rho"],gasphase)
     # As = 1.0
     #get the surface area
     AsV = get_value_from_xml(xmlroot,"AsV")
@@ -168,6 +170,7 @@ function cstr(input_file::AbstractString, lib_dir::AbstractString, sens::Bool, c
         smd = SurfaceReactions.compile_mech(mech_file,thermo_obj,gasphase)
         n_species += length(smd.sm.species)
         create_header(s_stream,"t","T", smd.sm.species)
+        write_csv(csv_s_stream, "t","T", smd.sm.species)
     end
 
     geom = (V, AsV)
@@ -285,7 +288,9 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
         # soln = solve(SteadyStateProblem(prob), DynamicSS(CVODE_BDF()), dt=1e-4, reltol=1e-10, abstol=1e-15, save_everystep=false,callback=cb)
         #close the files
         close(o_streams[1])
-        close(o_streams[2])            
+        close(o_streams[2]) 
+        close(o_streams[3])
+        close(o_streams[4])            
         return Symbol(soln.retcode)
     else
         # soln = solve(prob, CVODE_BDF(), reltol=1e-10, abstol=1e-15, save_everystep=false);   
@@ -352,11 +357,13 @@ end
 function save_data(u,t,integrator)
     state = integrator.p[1]
     thermo_obj = integrator.p[2]
-    g_stream, s_stream = o_streams
+    g_stream, s_stream, csv_g_stream, csv_s_stream = o_streams
     d = density(state.mole_frac,thermo_obj.molwt,state.T,state.p)
     write_to_file(g_stream,t,state.T,state.p,d,state.mole_frac)
+    write_csv(csv_g_stream,t,state.T,state.p,d,state.mole_frac)
     if integrator.p[5].surfchem
         write_to_file(s_stream,t,state.T,state.covg)    
+        write_csv(csv_s_stream,t,state.T,state.covg)    
     end
     @printf("%.4e\n",t)
 end

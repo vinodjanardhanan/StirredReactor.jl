@@ -8,3 +8,10 @@ run
 /test/cstr_ch4/*.dat
 /test/cstr_h2o2/*.dat
 /test/cstr_udf/*.dat
+/test/cstr_surf/*.csv
+/test/cstr_ch4/*.csv
+/test/cstr_h2o2/*.csv
+/test/cstr_udf/*.csv
+
+
+

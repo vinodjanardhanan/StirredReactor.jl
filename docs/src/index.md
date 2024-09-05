@@ -146,10 +146,10 @@ The xml input file and the *lib* directory containig other required input files 
 
 
 ## Output
-The code generates two output files in the same directory where the input file **`cstr.xml`** is present. 
-The file **`gas_profile.dat`** contains the mole fraction of the gas phase species as a function of time.
-The file **`surf_profile.dat`** contains the surface coverages of adsorbed species as a function of time. 
-In addition to these two files, the code also generates terminal output, which shows integration progress.
+The code generates four output files in the same directory where the input file **`cstr.xml`** is present. 
+The file **`gas_profile.dat`**, and **`gas_profile.csv`** contains the mole fraction of the gas phase species as a function of time. One is a tab separated file and other one is a comma separated one.
+The file **`surf_profile.dat`**. **`surf_profile.csv`** contains the surface coverages of adsorbed species as a function of time. One is a tab separated file and other one is a comma separated one.
+In addition to these files, the code also generates terminal output, which shows integration progress.
 The terminal output is nothing by the integration time. 
 
 An example terminal output is shown below
