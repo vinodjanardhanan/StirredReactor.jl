@@ -28,6 +28,15 @@ using IdealGas, RxnHelperUtils, SurfaceReactions, GasphaseReactions, ReactionCom
         @test retcode == Symbol("Success")        
     end
 
+
+    @testset "Testing gasphase and surface chemistry" begin
+        input_file = joinpath("gas_and_surf", "cstr.xml")
+        retcode = cstr(input_file, lib_dir, gaschem=true, surfchem=true)
+        @test retcode == Symbol("Success")        
+    end
+
+
+
     @testset "Testing surface chemistry with interface call " begin
         inlet_comp = Dict("CH4"=>0.25,"H2O"=>0.25, "H2"=>0.0, "CO"=>0.0, "CO2"=>0.0, "O2"=>0.0, "N2"=>0.5)
         T = 1073.15

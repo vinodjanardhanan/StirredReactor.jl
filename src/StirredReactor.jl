@@ -258,19 +258,19 @@ function cstr_common(conditions, geom, chem, mech_def, n_species,  time, thermo_
 
     
     
-    if chem.surfchem
+    if chem.surfchem && ! chem.gaschem
         cp = ConstParams(q,avg_molwt,AsV,V,c_in, T, p)
-        params = (sr_state, thermo_obj, smd, cp, chem)
-    elseif chem.gaschem
+        params = (g_state = nothing, s_state = sr_state, thermo = thermo_obj, smd = smd, gmd = nothing, cp = cp, chem = chem)
+    elseif chem.gaschem && ! chem.surfchem
         # As is not required in the case of gas chemistry
         cp = ConstParams(q,avg_molwt,1.0, V, c_in, T, p)
-        params = (gr_state, thermo_obj, gmd, cp, chem)
+        params = (g_state = gr_state, s_state=nothing, thermo = thermo_obj, gmd = gmd, smd = nothing, cp = cp, chem = chem)
     elseif chem.gaschem && chem.surfchem
         cp = ConstParams(q,avg_molwt,AsV,V,c_in, T, p)
-        params = (gr_state, sr_state, thermo_obj, smd, gmd, cp, chem)
+        params = (g_state = gr_state, s_state = sr_state, thermo = thermo_obj, smd = smd, gmd =  gmd,  cp = cp, chem = chem)
     else
         cp = ConstParams(q,avg_molwt,AsV, V, c_in, T, p)
-        params = (ud_state, thermo_obj, UsrMech(), cp, chem)
+        params = (state = ud_state, thermo = thermo_obj, cp = cp, chem = chem)
     end
         
     prob = ODEProblem(residual!,sol,t_span,params)
@@ -305,47 +305,57 @@ end
 
 function residual!(du,u,p,t)
     # state, thermo_obj, md, cp, o_streams = p
-    state = 1
-    thermo_obj = 2
-    md = 3
-    cp = p[4]   # ConstParams
-    chem = 5
+    # state = 1
+    # thermo_obj = 2
+    # md = 3
+    cp = p[:cp]   # ConstParams
+    # chem = 5
     
 
-    ng = length(p[state].mole_frac)
     
-    conc = u[1:ng]
+
     #update the state with latest mole fractions
-    p[state].mole_frac = conc/sum(conc)
+    if p[:chem].surfchem && !p[:chem].gaschem
+        ng = length(p[:s_state].mole_frac)    
+        conc = u[1:ng]
+        p[:s_state].mole_frac = conc/sum(conc)
+        q_out = cp.q_in*cp.avg_molwt_in/average_molwt(p[:s_state].mole_frac,p[:thermo].molwt)
+    elseif p[:chem].gaschem 
+        ng = length(p[:g_state].mole_frac)    
+        conc = u[1:ng]
+        p[:g_state].mole_frac = conc/sum(conc)
+        q_out = cp.q_in*cp.avg_molwt_in/average_molwt(p[:g_state].mole_frac,p[:thermo].molwt)
+    end
+
 
 
 
     #outlet volumetric flow rate 
-    q_out = cp.q_in*cp.avg_molwt_in/average_molwt(p[state].mole_frac,p[thermo_obj].molwt)
+    
 
 
     #update the state with latest coverages
-    if p[chem].surfchem
-        ns = length(p[md].sm.species)
-        p[state].covg = u[ng+1:ng+ns]
+    if p[:chem].surfchem
+        ns = length(p[:smd].sm.species)
+        p[:s_state].covg = u[ng+1:ng+ns]
         #calculate the molar production rates        
-        SurfaceReactions.calculate_molar_production_rates!(p[state],p[thermo_obj],p[md])
+        SurfaceReactions.calculate_molar_production_rates!(p[:s_state],p[:thermo],p[:smd])
         # rgVec = (p[state].source[1:ng] .* p[thermo_obj].molwt)*cp.As/cp.V    
-        rgVec = p[state].source[1:ng] * cp.AsV
+        rgVec = p[:s_state].source[1:ng] * p[:cp].AsV
         #surface species residual 
-        du[ng+1:ng+ns] = (p[state].source[ng+1:ng+ns] .* p[md].sm.si.site_coordination)/(p[md].sm.si.density*1e4)            
+        du[ng+1:ng+ns] = (p[:s_state].source[ng+1:ng+ns] .* p[:smd].sm.si.site_coordination)/(p[:smd].sm.si.density*1e4)            
     end
     
-    if p[chem].gaschem
-        GasphaseReactions.calculate_molar_production_rates!(p[state], p[md], p[thermo_obj])
-        rgVec = p[state].source[1:ng] 
+    if p[:chem].gaschem
+        GasphaseReactions.calculate_molar_production_rates!(p[:g_state], p[:gmd], p[:thermo])
+        rgVec = p[:g_state].source[1:ng] 
     end
 
 
     # call to get user defined rates 
-    if p[chem].userchem
-        p[chem].udf(p[state])
-        rgVec = p[state].source[1:ng] * cp.AsV
+    if p[:chem].userchem
+        p[:chem].udf(p[:state])
+        rgVec = p[:state].source[1:ng] * p[:cp].AsV
     end
     # Gas species residual 
     du[1:ng] = ( (cp.q_in/cp.V)*cp.c_in - (q_out/cp.V) * u[1:ng]) + rgVec 
@@ -355,15 +365,19 @@ end
     
 
 function save_data(u,t,integrator)
-    state = integrator.p[1]
-    thermo_obj = integrator.p[2]
+    if integrator.p[:chem].surfchem && !integrator.p[:chem].gaschem
+        state = integrator.p[:s_state]
+    elseif integrator.p[:chem].gaschem
+        state = integrator.p[:g_state]
+    end
+    thermo_obj = integrator.p[:thermo]
     g_stream, s_stream, csv_g_stream, csv_s_stream = o_streams
     d = density(state.mole_frac,thermo_obj.molwt,state.T,state.p)
     write_to_file(g_stream,t,state.T,state.p,d,state.mole_frac)
     write_csv(csv_g_stream,t,state.T,state.p,d,state.mole_frac)
-    if integrator.p[5].surfchem
-        write_to_file(s_stream,t,state.T,state.covg)    
-        write_csv(csv_s_stream,t,state.T,state.covg)    
+    if integrator.p[:chem].surfchem
+        write_to_file(s_stream,t,state.T, integrator.p[:s_state].covg)    
+        write_csv(csv_s_stream,t,state.T, integrator.p[:s_state].covg)    
     end
     @printf("%.4e\n",t)
 end
